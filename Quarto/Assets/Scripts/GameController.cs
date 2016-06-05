@@ -108,14 +108,13 @@ public class GameController : MonoBehaviour
             YourTurn = true;
         }
 
-        Debug.Log("Regular turns are starting");
+        //Debug.Log("Regular turns are starting");
 
         int turnCount = 1;
         bool foundMatch = false;
         GameObject[] gamePieces = GameObject.FindGameObjectsWithTag("GamePiece");
         while (!foundMatch)
         {
-            Debug.Log("Turn " + turnCount);
             if (YourTurn)
             {
                 Debug.Log("Your turn - choose a spot on the board");
@@ -127,7 +126,7 @@ public class GameController : MonoBehaviour
                 }
                 foundMatch = CheckBoardForMatches(gameRows);
                 hasWon = foundMatch;
-                Debug.Log("Your turn - choose a new piece");
+                //Debug.Log("Your turn - choose a new piece");
                 //wait for you to pick a piece for computer
                 while (!StartingSpace.ss.HasPiece)
                 {
@@ -152,7 +151,7 @@ public class GameController : MonoBehaviour
                 //        testRow[i][k].UndoTest();
                 //    }
                 //}
-                Debug.Log("Computers turn - picking a spot to place piece");
+                //Debug.Log("Computers turn - picking a spot to place piece");
                 //random for now
                 CircleSpot cSpot = gameRows[UnityEngine.Random.Range(0, 4)][UnityEngine.Random.Range(0, 4)];
                 while (cSpot.HasPiece)
@@ -165,7 +164,7 @@ public class GameController : MonoBehaviour
                 yield return new WaitForSeconds(0.25f);
                 cSpot.OnVirtualMouseDown();
 
-                Debug.Log("Computers turn - choosing a new piece");
+                //Debug.Log("Computers turn - choosing a new piece");
                 //Don't choose a piece that will cause a match (only matters if any row has more than 3 pieces)
                 GamePiece gp = gamePieces[UnityEngine.Random.Range(0, gamePieces.Length)].GetComponent<GamePiece>();
                 yield return new WaitForSeconds(0.25f);
@@ -217,6 +216,7 @@ public class GameController : MonoBehaviour
 
     bool HasMatchingType(CircleSpot[] row)
     {
+        if (row[0].GetComponent<CircleSpot>().pType == PieceType.PE || row[1].GetComponent<CircleSpot>().pType == PieceType.PE || row[2].GetComponent<CircleSpot>().pType == PieceType.PE || row[3].GetComponent<CircleSpot>().pType == PieceType.PE) return false;
         bool[] r1 = GetBits(row[0].GetComponent<CircleSpot>().pType);
         bool[] r2 = GetBits(row[1].GetComponent<CircleSpot>().pType);
         bool[] r3 = GetBits(row[2].GetComponent<CircleSpot>().pType);
@@ -226,6 +226,11 @@ public class GameController : MonoBehaviour
         if (r1[1] && r2[1] && r3[1] && r4[1]) return true;
         if (r1[2] && r2[2] && r3[2] && r4[2]) return true;
         if (r1[3] && r2[3] && r3[3] && r4[3]) return true;
+
+        if (!(r1[0] || r2[0] || r3[0] || r4[0])) return true;
+        if (!(r1[1] || r2[1] || r3[1] || r4[1])) return true;
+        if (!(r1[2] || r2[2] || r3[2] || r4[2])) return true;
+        if (!(r1[3] || r2[3] || r3[3] || r4[3])) return true;
 
         return false;
     }
