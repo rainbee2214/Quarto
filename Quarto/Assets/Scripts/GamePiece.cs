@@ -18,7 +18,7 @@ public class GamePiece : MonoBehaviour
 
     public void OnMouseDown()
     {
-        if (Placed || !GameController.controller.YourTurn) return;
+        if ((Placed || !GameController.controller.YourTurn) && GameController.controller.singlePlayer) return;
         if (!StartingSpace.ss.HasPiece)
         {
             Debug.Log("I'm being touched!");
@@ -32,7 +32,7 @@ public class GamePiece : MonoBehaviour
 
     public void OnVirtualMouseDown()
     {
-        if (Placed) return;
+        if (Placed && GameController.controller.singlePlayer) return;
         if (!StartingSpace.ss.HasPiece)
         {
             Debug.Log("I'm being touched!");

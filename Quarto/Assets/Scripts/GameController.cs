@@ -19,6 +19,7 @@ public class GameController : MonoBehaviour
     public static GameController controller;
     public GamePiece CurrentGamePiece { get; set; }
 
+    public bool singlePlayer = true;
     public bool YourTurn; // { get; set; }
     CircleSpot[][] gameRows;
 
@@ -64,6 +65,7 @@ public class GameController : MonoBehaviour
 
     }
 
+    string message = "";
     void Update()
     {
         if (hasWon)
@@ -73,7 +75,22 @@ public class GameController : MonoBehaviour
             StartCoroutine(WonGame());
         }
 
-        messageText.text = YourTurn ? (isChoosingCircleSpot ? " Place the piece on the board." : "Choose a piece for the AI to place") : "AI turn";
+        if (YourTurn)
+        {
+            message = (isChoosingCircleSpot ? " Place the piece on the board" + (singlePlayer ? "." : " player 1.") : "Choose a piece for " + (singlePlayer ? "the AI" : "player 2") + " to place.");
+        }
+        else
+        {
+            if (singlePlayer)
+            {
+                message = "AI is working things out...";
+            }
+            else
+            {
+                message = (isChoosingCircleSpot ? " Place the piece on the board player 2." : "Choose a piece for player 1 to place.");
+            }
+        }
+        messageText.text = message;
     }
 
     int mainScene = 0;
@@ -102,10 +119,21 @@ public class GameController : MonoBehaviour
         }
         else
         {
-            //choose a starting piece for the player at random
-            GameObject[] g = GameObject.FindGameObjectsWithTag("GamePiece");
-            g[UnityEngine.Random.Range(0, g.Length)].GetComponent<GamePiece>().OnVirtualMouseDown();
-            YourTurn = true;
+            if (singlePlayer)
+            {
+                //choose a starting piece for the player at random
+                GameObject[] g = GameObject.FindGameObjectsWithTag("GamePiece");
+                g[UnityEngine.Random.Range(0, g.Length)].GetComponent<GamePiece>().OnVirtualMouseDown();
+                YourTurn = true;
+            }
+            else
+            {
+                while (!StartingSpace.ss.HasPiece)
+                {
+                    yield return null;
+                }
+                YourTurn = true;
+            }
         }
 
         //Debug.Log("Regular turns are starting");
@@ -137,44 +165,68 @@ public class GameController : MonoBehaviour
             }
             else
             {
-                //pick a spot on the board
-                //look for a winning solution - through all remaining places, if no place, pick random
-                //CircleSpot[][] testRow = gameRows;
-                //for(int i = 0; i < 4; i++)
-                //{
-                //    for (int k = 0; k < 4; k++)
-                //    {
-                //        if (gameRows[i][k].HasPiece) continue;
-                //        testRow = gameRows;
-                //        testRow[i][k].OnVirtualMouseDownTest();
-                //        Debug.Log("Testing " + CheckBoardForMatches(testRow));
-                //        testRow[i][k].UndoTest();
-                //    }
-                //}
-                //Debug.Log("Computers turn - picking a spot to place piece");
-                //random for now
-                CircleSpot cSpot = gameRows[UnityEngine.Random.Range(0, 4)][UnityEngine.Random.Range(0, 4)];
-                while (cSpot.HasPiece)
+                if (singlePlayer)
                 {
-                    //pick a new piece
-                    cSpot = gameRows[UnityEngine.Random.Range(0, 4)][UnityEngine.Random.Range(0, 4)];
-                    Debug.Log(cSpot.HasPiece);
-                    yield return null;
-                }
-                yield return new WaitForSeconds(0.25f);
-                cSpot.OnVirtualMouseDown();
+                    //pick a spot on the board
+                    //look for a winning solution - through all remaining places, if no place, pick random
+                    //CircleSpot[][] testRow = gameRows;
+                    //for(int i = 0; i < 4; i++)
+                    //{
+                    //    for (int k = 0; k < 4; k++)
+                    //    {
+                    //        if (gameRows[i][k].HasPiece) continue;
+                    //        testRow = gameRows;
+                    //        testRow[i][k].OnVirtualMouseDownTest();
+                    //        Debug.Log("Testing " + CheckBoardForMatches(testRow));
+                    //        testRow[i][k].UndoTest();
+                    //    }
+                    //}
+                    //Debug.Log("Computers turn - picking a spot to place piece");
+                    //random for now
+                    CircleSpot cSpot = gameRows[UnityEngine.Random.Range(0, 4)][UnityEngine.Random.Range(0, 4)];
+                    while (cSpot.HasPiece)
+                    {
+                        //pick a new piece
+                        cSpot = gameRows[UnityEngine.Random.Range(0, 4)][UnityEngine.Random.Range(0, 4)];
+                        Debug.Log(cSpot.HasPiece);
+                        yield return null;
+                    }
+                    yield return new WaitForSeconds(0.25f);
+                    cSpot.OnVirtualMouseDown();
 
-                //Debug.Log("Computers turn - choosing a new piece");
-                //Don't choose a piece that will cause a match (only matters if any row has more than 3 pieces)
-                GamePiece gp = gamePieces[UnityEngine.Random.Range(0, gamePieces.Length)].GetComponent<GamePiece>();
-                yield return new WaitForSeconds(0.25f);
-                while (gp.Placed)
-                {
-                    gp = gamePieces[UnityEngine.Random.Range(0, gamePieces.Length)].GetComponent<GamePiece>();
-                    yield return null;
+                    //Debug.Log("Computers turn - choosing a new piece");
+                    //Don't choose a piece that will cause a match (only matters if any row has more than 3 pieces)
+                    GamePiece gp = gamePieces[UnityEngine.Random.Range(0, gamePieces.Length)].GetComponent<GamePiece>();
+                    yield return new WaitForSeconds(0.25f);
+                    while (gp.Placed)
+                    {
+                        gp = gamePieces[UnityEngine.Random.Range(0, gamePieces.Length)].GetComponent<GamePiece>();
+                        yield return null;
+                    }
+                    gp.OnVirtualMouseDown();
+                    YourTurn = true;
                 }
-                gp.OnVirtualMouseDown();
-                YourTurn = true;
+                else
+                {
+                    //2nd Players turn
+                    Debug.Log("Other players turn - choose a spot on the board");
+                    //wait for you to place piece on board
+                    while (StartingSpace.ss.HasPiece)
+                    {
+                        isChoosingCircleSpot = true;
+                        yield return null;
+                    }
+                    foundMatch = CheckBoardForMatches(gameRows);
+                    hasWon = foundMatch;
+                    //Debug.Log("Your turn - choose a new piece");
+                    //wait for you to pick a piece for computer
+                    while (!StartingSpace.ss.HasPiece)
+                    {
+                        isChoosingCircleSpot = false;
+                        yield return null;
+                    }
+                    YourTurn = true;
+                }
 
             }
             turnCount++;

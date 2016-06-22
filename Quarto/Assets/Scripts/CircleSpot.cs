@@ -27,7 +27,7 @@ public class CircleSpot : MonoBehaviour
     public PieceType pType = PieceType.PE; // { get; set; }
     public void OnMouseDown()
     {
-        if (HasPiece || !GameController.controller.YourTurn) return;
+        if ((HasPiece || !GameController.controller.YourTurn) && GameController.controller.singlePlayer) return;
         if (StartingSpace.ss.HasPiece)
         {
             GameController.controller.CurrentGamePiece.gameObject.transform.position = transform.position;
@@ -39,7 +39,7 @@ public class CircleSpot : MonoBehaviour
     }
     public void OnVirtualMouseDown()
     {
-        if (HasPiece) return;
+        if (HasPiece && GameController.controller.singlePlayer) return;
         if (StartingSpace.ss.HasPiece)
         {
             GameController.controller.CurrentGamePiece.gameObject.transform.position = transform.position;
